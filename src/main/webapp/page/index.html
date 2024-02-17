@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background-color: #e3f2fd;
+        }
+
+        td, th {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        label {
+            margin-right: 15px;
+            color: #666;
+        }
+
+        #app{
+            position: relative;
+        }
+        .cart_btn{
+            position: absolute;
+            right: 10px;
+            top:10px
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="cart_btn">
+        <button @click="location.href='cart.html'">购物车</button>
+    </div>
+    <div class="container">
+        类型：<span v-for="(item,index) in types">
+           <label> <input type="radio" name="type" v-model="type" :value="item"> {{item}}</label>
+         </span>
+        <br>
+        标签：<span v-for="(item,index) in labels">
+            <label><input type="radio" name="label" v-model="label" :value="item"> {{item}}</label>
+         </span>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <td>编号</td>
+            <td>商品</td>
+            <td>价格</td>
+            <td>类型</td>
+            <td>标签</td>
+            <td>操作</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item,index) in pageInfo.list" :key="item.id">
+            <td>{{item.id}}</td>
+            <td>{{item.pname}}</td>
+            <td>{{item.price}}</td>
+            <td>{{item.type}}</td>
+            <td>{{item.label}}</td>
+            <td>
+                <button @click="addCart(item)">加入</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="buttons">
+        <button @click="getPage(1)">首页</button>
+        <button @click="getPage(pageInfo.prePage)" :disabled="pageInfo.isFirstPage">上一页</button>
+        <button v-for="(item,index) in pageInfo.navigatepageNums"
+                @click="getPage(item)">{{item}}
+        </button>
+        <button @click="getPage(pageInfo.nextPage)" :disabled="pageInfo.isLastPage">下一页</button>
+        <button @click="getPage(pageInfo.pages)">尾页</button>
+    </div>
+
+</div>
+
+<script src="/sb/js/axios.min.js"></script>
+<script src="/sb/js/vue.min.js"></script>
+<script>
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                pageInfo: {},
+                types: [],
+                labels: [],
+                type: "",
+                label: ""
+            }
+        },
+        methods: {
+            getPage(pageNum) {
+                axios.get(`/sb/products/${pageNum}/5?type=${this.type}&label=${this.label}`).then(res => {
+                    console.log(res)
+                    this.pageInfo = res.data.data;
+                })
+            },
+            getTypes() {
+                axios.get("/sb/products/type").then(res => {
+                    this.types = res.data.data
+                })
+            },
+            getLabels() {
+                axios.get("/sb/products/label").then(res => {
+                    this.labels = res.data.data
+                })
+            },
+            addCart(product) {
+                axios.post("/sb/cart", {
+                    product,
+                    num: 1
+                }).then(res => {
+                    if (res.data.code === 200) {
+                        alert("ok")
+                    } else if(res.data.code===250) {
+                        alert("error")
+                    }else if(res.data.code===500){
+                        alert("重复添加")
+                    }else{
+                        alert("会话过期")
+                    }
+                })
+            }
+        },
+        created() {
+            this.getPage(1);
+            this.getLabels();
+            this.getTypes();
+        },
+        watch: {
+            type() {
+                console.log(this.type)
+                this.getPage(1);
+            },
+            label() {
+                console.log(this.label)
+                this.getPage(1);
+            }
+        }
+    })
+</script>
+</body>
+</html>

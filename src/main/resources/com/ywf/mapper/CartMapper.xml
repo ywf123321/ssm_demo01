@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ywf.mapper.CartMapper">
+    <insert id="addCart">
+        insert into cart values (#{user.id},#{product.id},#{num})
+    </insert>
+
+    <resultMap id="cartMap" type="Cart">
+        <association property="product">
+            <id property="id" column="pid"/>
+        </association>
+        <association property="user">
+            <id property="id" column="uid"/>
+        </association>
+    </resultMap>
+    <select id="getCartByUser" resultMap="cartMap">
+        select  *
+        from cart c
+        inner join user u on u.id=c.uid
+        inner join product p on p.id=c.pid
+        where u.id=#{id}
+    </select>
+    <update id="updateCartNum">
+        update cart set num=#{num} where pid=#{product.id} and uid=#{user.id}
+    </update>
+
+    <delete id="delCart">
+        delete from cart where uid=#{uid} and pid=#{pid}
+    </delete>
+</mapper>

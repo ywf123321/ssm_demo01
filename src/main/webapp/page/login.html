@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .login-form h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #667eea;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        button:hover {
+            background-color: #5a67d8;
+        }
+
+    </style>
+</head>
+<body>
+<div class="login-container" id="app">
+    <div class="login-form">
+        <h2>登录</h2>
+        <div class="input-group">
+            <input type="text" placeholder="用户名" required v-model="user.username">
+        </div>
+        <div class="input-group">
+            <input type="password" placeholder="密码" required v-model="user.pwd">
+        </div>
+        <button @click="login">登录</button>
+    </div>
+</div>
+<script src="/sb/js/vue.min.js"></script>
+<script src="/sb/js/axios.min.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        data(){
+            return {
+                user:{
+                    username:"",
+                    pwd:""
+                }
+            }
+        },
+        methods:{
+            login(){
+                axios.post("/sb/user",this.user).then(res=>{
+                    if(res.data.code===200){
+                        location.href="/sb/page/index.html"
+                    }else{
+                        alert("用户名密码错误")
+                    }
+
+                })
+            }
+        }
+
+    })
+</script>
+</body>
+</html>

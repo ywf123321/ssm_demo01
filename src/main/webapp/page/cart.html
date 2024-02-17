@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仿淘宝购物车</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .cart-container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .item-select {
+            margin-right: 10px;
+        }
+
+        .item-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .item-img {
+            width: 60px;
+            height: 60px;
+            margin-right: 10px;
+        }
+
+        .item-name {
+            flex-grow: 1;
+        }
+
+        .item-price, .item-subtotal {
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+        }
+
+        .item-quantity button {
+            background-color: #ddd;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .item-quantity input {
+            width: 40px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .item-remove {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .sub_btn{
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="cart-container" id="app">
+    <h1>我的购物车</h1>
+    <div class="cart-item" v-for="(item,index) in cart" :key="index">
+        <input type="checkbox" class="item-select" v-model="item.ck">
+        <div class="item-content">
+            <img src="../img/京东10.jpg" alt="商品图片" class="item-img">
+            <span class="item-name">{{item.product.pname}}</span>
+        </div>
+        <span class="item-price">￥{{item.product.price}}</span>
+        <div class="item-quantity">
+            <button @click="updateNum(index,item.num-1)">-</button>
+            <input type="text" v-model.lazy="item.num" @change="updateNum(index,item.num)">
+            <button @click="updateNum(index,item.num+1)">+</button>
+        </div>
+        <span class="item-subtotal">￥{{total_price(index)}}</span>
+        <button class="item-remove" @click="delCart(index)">删除</button>
+    </div>
+    <form action="/sb/payOrder" method="post" class="sub_btn">
+        <input type="hidden" name="pids" v-for="item in pids" :value="item" >
+        <input type="hidden" name="total_price" :value="allPrice">
+        <input type="submit"  class="item-remove" value="结算">
+    </form>
+</div>
+<script src="/sb/js/axios.min.js"></script>
+<script src="/sb/js/vue.min.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        data(){
+            return{
+                cart:[],
+
+            }
+        },
+        methods:{
+            fun(index){
+                axios.put("/sb/cart",this.cart[index]).then(res=>{
+                    console.log(res)
+                })
+            },
+            updateNum(index,num){
+                if(num<1){
+                    num=1
+                }
+                this.cart[index].num=num;
+                this.fun(index);
+            },
+            delCart(index){
+                axios.delete("/sb/cart/"+this.cart[index].product.id).then(res=>{
+                    if(res.data.code===200){
+                        this.cart.splice(index,1)
+                    }
+                })
+            },
+
+        },
+        created(){
+            axios.get("/sb/cart").then(res=>{
+                for(let i= 0;i<res.data.data.length;i++){
+                    res.data.data[i].ck=false;
+                }
+                this.cart=res.data.data;
+                console.log(this.cart)
+            })
+        },
+        computed:{
+            total_price(){
+                return (index)=>{
+                    let num=this.cart[index].product.price*this.cart[index].num
+                    return num;
+                }
+
+            },
+            allPrice(){
+               return  this.cart.reduce((a,b)=>b.ck?a+b.num*b.product.price:a,0)
+            },
+
+            pids(){
+                return this.cart.filter(a=>a.ck).map(b=>b.product.id)
+            }
+        },
+
+
+    })
+
+</script>
+</body>
+</html>
